@@ -10,6 +10,11 @@ Usage: ShowPCR.efi [-all] [--pcr] [n] digest_algorithm
 
 --pcr : pick an individual PCR value to output
 
+## Releases
+
+It is recommended to fetch the latest release from github, rather
+than build your own.
+
 ## Build instructions
 
 ## Prerequisites
