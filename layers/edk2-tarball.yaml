@@ -1,0 +1,24 @@
+config:
+  prerequisites:
+    - "${{TOP_D}}/layers/minbase.yaml"
+
+edk2-tarball:
+    build_only: true
+    from:
+        type: built
+        tag: minbase
+    binds:
+        - ${{TOP_D}}/dl -> /output
+    run: |
+        #!/bin/bash
+        set -o errexit -o pipefail -o nounset
+        set -x
+
+        pkgtool install git
+
+        mkdir -p /root
+        cd /root
+        git clone https://github.com/tianocore/edk2.git
+        cd /root/edk2
+        git submodule update --init
+        tar -C /root -cpzf /output/edk2.tar.gz edk2

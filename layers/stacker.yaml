@@ -1,0 +1,77 @@
+config:
+  prerequisites:
+    - "${{TOP_D}}/layers/minbase.yaml"
+
+build-env:
+    from:
+      type: built
+      tag: minbase
+    run: |
+        #!/bin/bash
+        set -o errexit -o pipefail -o nounset
+
+        # edk2 wants /usr/bin/python, nasm > 2.14, x11 headers
+        pkgtool install \
+            build-essential git uuid-dev iasl nasm python-is-python3 \
+            software-properties-common libx11-dev libxext-dev nasm
+        nasm --version
+
+        mkdir -p /root
+
+build-edk2-env:
+    from:
+        type: built
+        tag: build-env
+    import:
+        - "${{EDK2_TARBALL}}"
+    run: |
+        #!/usr/bin/bash -x
+        set -o errexit -o pipefail # -o nounset, edksetup.sh has unbound vars
+
+        EDK2_SRC=/root/edk2
+        CONF=${EDK2_SRC}/Conf/target.txt
+        APP=${EDK2_SRC}/EmulatorPkg/Application/showpcr
+        DSC=${EDK2_SRC}/EmulatorPkg/EmulatorPkg.dsc
+
+        mkdir -p /root && cd /root && tar -xzf /stacker/edk2.tar.gz
+        cd $EDK2_SRC
+        make -C BaseTools
+        cd $EDK2_SRC
+
+        # this generates the CONF file we need to edit
+        source edksetup.sh
+        ls -al ${EDK2_SRC}/Conf
+        sed -e 's,= IA32,= X64,g' -e 's,= VS2015x86,= GCC5,g' -i.orig ${CONF}
+
+        mkdir -p ${APP}
+        ls -al ${APP}
+
+        # Add showpcr to EmulatorPkg.dsc
+        ls -al ${DSC}
+        sed -i ${DSC} \
+          -e '/UefiApplicationEntryPoint.*/a \ \ ShellCEntryLib|ShellPkg/Library/UefiShellCEntryLib/UefiShellCEntryLib.inf\n' \
+          -e '/MdeModulePkg.*Universal.*Disk.*DiskIoDxe.*DiskIoDxe.inf/i \ \ EmulatorPkg/Application/showpcr/showpcr.inf'
+
+build-showpcr:
+    build_only: true
+    from:
+        type: built
+        tag: build-edk2-env
+    import:
+       - "${{TOP_D}}/showpcr.c"
+       - "${{TOP_D}}/showpcr.inf"
+    binds:
+        - ${{TOP_D}}/dl -> /output
+    run: |
+        #!/bin/bash
+        set -o errexit -o pipefail # -o nounset, edksetup.sh has unbound vars
+        set +x
+        ls -al /
+
+        cd /root/edk2
+        cp -v /stacker/showpcr* /root/edk2/EmulatorPkg/Application/showpcr
+
+        export EDK_TOOLS_PATH=/root/edk2/BaseTools
+        source edksetup.sh BaseTools
+        build
+        cp -v /root/edk2/Build/EmulatorX64/DEBUG_GCC5/X64/showpcr.efi /output

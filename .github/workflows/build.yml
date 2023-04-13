@@ -1,0 +1,32 @@
+name: showpcr-build
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v[0-9].[0-9]+.[0-9]+"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Pull source
+        uses: actions/checkout@v3
+      - name: build bootkit
+        run: |
+          make
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: showpcr.efi
+          path: showpcr.efi
+          if-no-files-found: error
+      - name: Release bin
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: showpcr.efi
