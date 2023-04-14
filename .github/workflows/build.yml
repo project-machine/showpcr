@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Pull source
         uses: actions/checkout@v3
-      - name: build bootkit
+      - name: build showpcr
         run: |
           make
       - name: Upload artifacts
