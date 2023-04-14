@@ -61,7 +61,7 @@ build-showpcr:
        - "${{TOP_D}}/showpcr.c"
        - "${{TOP_D}}/showpcr.inf"
     binds:
-        - ${{TOP_D}}/dl -> /output
+        - ${{TOP_D}} -> /output
     run: |
         #!/bin/bash
         set -o errexit -o pipefail # -o nounset, edksetup.sh has unbound vars
