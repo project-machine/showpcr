@@ -12,7 +12,7 @@ Usage: ShowPCR.efi [-all] [--pcr] [n] digest_algorithm
 
 ## Releases
 
-It is recommended to fetch the latest release from github, rather
+It is recommended to fetch the latest [release](https://github.com/project-machine/showpcr/releases) from github, rather
 than build your own.
 
 ## Build instructions
