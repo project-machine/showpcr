@@ -75,3 +75,4 @@ build-showpcr:
         source edksetup.sh BaseTools
         build
         cp -v /root/edk2/Build/EmulatorX64/DEBUG_GCC5/X64/showpcr.efi /output
+        cp -v /root/edk2/Build/EmulatorX64/DEBUG_GCC5/X64/Shell.efi /output/shell.efi

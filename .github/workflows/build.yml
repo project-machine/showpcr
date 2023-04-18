@@ -22,11 +22,15 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: showpcr.efi
-          path: showpcr.efi
+          name: efi-applications
+          path: |
+            showpcr.efi
+            shell.efi
           if-no-files-found: error
       - name: Release bin
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: showpcr.efi
+          files: |
+            showpcr.efi
+            shell.efi

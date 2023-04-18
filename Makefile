@@ -11,9 +11,14 @@ STACKER_RELEASE ?= v1.0.0-rc4
 MYPATH = $(DL_TOOLS)
 EDK2_TARBALL = $(DL_D)/edk2.tar.gz
 SHOWPCR_EFI = $(TOP_D)/showpcr.efi
+SHELL_EFI = $(TOP_D)/shell.efi
 export PATH := $(MYPATH):$(PATH)
 
-all: $(SHOWPCR_EFI)
+all: showpcr.efi shell.efi
+
+showpcr.efi: $(SHOWPCR_EFI)
+
+shell.efi: $(SHELL_EFI)
 
 edk2.tar.gz: $(EDK2_TARBALL)
 
@@ -38,6 +43,7 @@ $(SHOWPCR_EFI): $(STACKER) showpcr.c showpcr.inf layers/stacker.yaml $(EDK2_TARB
 	"--layer-type=tar" \
 	"--stacker-file=layers/stacker.yaml"
 
+$(SHELL_EFI): $(SHOWPCR_EFI)
 
 $(STACKER):
 	@mkdir -p $(DL_TOOLS)
