@@ -1,6 +1,12 @@
 DOCKER_BASE ?= docker://
 UBUNTU_MIRROR ?= http://archive.ubuntu.com/ubuntu
 
+APP_VERSION = $(shell git describe --tags --always \
+        "--match=v[0-9]*.[0-9]*.[0-9]*" || echo no-git)
+ifeq ($(APP_VERSION),$(filter $(APP_VERSION), "", no-git))
+$(error "Bad value for APP_VERSION: '$(APP_VERSION)'")
+endif
+
 TOP_D := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 BUILD_D = $(TOP_D)/build
 DL_D = $(TOP_D)/dl
@@ -40,6 +46,7 @@ $(SHOWPCR_EFI): $(STACKER) showpcr.c showpcr.inf layers/stacker.yaml $(EDK2_TARB
 	"--substitute=DOCKER_BASE=$(DOCKER_BASE)" \
 	"--substitute=UBUNTU_MIRROR=$(UBUNTU_MIRROR)" \
 	"--substitute=EDK2_TARBALL=$(EDK2_TARBALL)" \
+	"--substitute=APP_VERSION=$(APP_VERSION)" \
 	"--layer-type=tar" \
 	"--stacker-file=layers/stacker.yaml"
 

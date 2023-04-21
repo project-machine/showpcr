@@ -60,12 +60,13 @@ build-showpcr:
     import:
        - "${{TOP_D}}/showpcr.c"
        - "${{TOP_D}}/showpcr.inf"
+       - "${{TOP_D}}/layers/sbat.csv.in"
     binds:
         - ${{TOP_D}} -> /output
     run: |
         #!/bin/bash
         set -o errexit -o pipefail # -o nounset, edksetup.sh has unbound vars
-        set +x
+        set -x
         ls -al /
 
         cd /root/edk2
@@ -74,5 +75,24 @@ build-showpcr:
         export EDK_TOOLS_PATH=/root/edk2/BaseTools
         source edksetup.sh BaseTools
         build
-        cp -v /root/edk2/Build/EmulatorX64/DEBUG_GCC5/X64/showpcr.efi /output
-        cp -v /root/edk2/Build/EmulatorX64/DEBUG_GCC5/X64/Shell.efi /output/shell.efi
+        cd /root/edk2/Build/EmulatorX64/DEBUG_GCC5/X64/
+
+        # Insert sbat section into EFI required for signing when run by shim
+        for app in showpcr.efi Shell.efi; do
+            appname=$(echo $app | tr '[:upper:]' '[:lower:]')
+            sbatf="/tmp/sbat.csv"
+            sed /stacker/sbat.csv.in \
+                -e "s,%%APP_NAME%%,$appname,g" \
+                -e "s,%%APP_VERSION%%,${{APP_VERSION}},g" \
+                > "$sbatf"
+            cat "$sbatf"
+            echo "Inserting sbat info into ${app} ..."
+            objcopy \
+            "--change-section-vma=.sbat=0x50000" \
+            "--add-section=.sbat=$sbatf" \
+            "--set-section-alignment=.sbat=512" \
+            "${app}" /output/${appname}
+
+            echo "Verifying sbat section is present..."
+            objdump --headers --section=.sbat "/output/${appname}"
+        done
